@@ -6,6 +6,10 @@
         android:title="@string/action_import"
         app:showAsAction="always"  />
 
+    <item android:id="@+id/action_export"
+        android:icon="@android:drawable/stat_sys_upload"
+        android:title="@string/action_export"
+        app:showAsAction="always"  />
     <!-- Settings, should always be in the overflow -->
     <!--<item android:id="@+id/action_settings"
         android:title="@string/action_settings"

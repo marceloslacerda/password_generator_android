@@ -1,13 +1,17 @@
 package br.com.msl09.passwordgenerator;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -31,9 +35,11 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.TreeMap;
@@ -53,6 +59,12 @@ public class MainActivity extends AppCompatActivity {
             "            \"id\": \"your-user\"\n" +
             "          }\n" +
             "        }");
+    // Storage Permissions
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
 
 
     @Override
@@ -143,6 +155,10 @@ public class MainActivity extends AppCompatActivity {
                 checkPermissionsAndOpenFilePicker();
                 return true;
 
+            case R.id.action_export:
+                tryToSavePasswords();
+                return true;
+
             default:
                 // If we got here, the user's action was not recognized.
                 // Invoke the superclass to handle it.
@@ -151,12 +167,81 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void tryToSavePasswords() {
+        if(isExternalStorageWritable()) {
+            verifyStoragePermissions(this);
+            writeToExternalStorage(PasswordInfo.fromMapToJSON(this.passwords).toString());
+        } else {
+            showError(R.string.export_error);
+        }
+
+    }
+
+    /**
+     * Checks if the app has permission to write to device storage
+     *
+     * If the app does not has permission then the user will be prompted to grant permissions
+     *
+     * @param activity
+     */
+    public static void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
+
+    /* Checks if external storage is available for read and write */
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        return Environment.MEDIA_MOUNTED.equals(state);
+    }
+
+    public void writeToExternalStorage(String data) {
+        File path = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS);
+        File file = new File(path, ".pinfo.json");
+
+        try {
+            // Make sure the downloads directory exists.
+            path.mkdirs();
+
+            OutputStream os = new FileOutputStream(file);
+            os.write(data.getBytes());
+            os.close();
+
+            // Tell the media scanner about the new file so that it is
+            // immediately available to the user.
+            MediaScannerConnection.scanFile(this,
+                    new String[] { file.toString() }, null,
+                    new MediaScannerConnection.OnScanCompletedListener() {
+                        public void onScanCompleted(String path, Uri uri) {
+                            Log.i("ExternalStorage", "Scanned " + path + ":");
+                            Log.i("ExternalStorage", "-> uri=" + uri);
+                        }
+                    });
+        } catch (IOException e) {
+            // Unable to create file, likely because external storage is
+            // not currently mounted.
+            showError(R.string.export_error);
+            Log.w("ExternalStorage", "Error writing " + file, e);
+        }
+    }
+
+
     private void checkPermissionsAndOpenFilePicker() {
         String permission = Manifest.permission.READ_EXTERNAL_STORAGE;
 
         if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
-                showError();
+                showError(R.string.storage_permission_error);
             } else {
                 ActivityCompat.requestPermissions(this, new String[]{permission}, PERMISSIONS_REQUEST_CODE);
             }
@@ -165,8 +250,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showError() {
-        Snackbar.make(findViewById(R.id.main_coordinator), R.string.storagePermissionError,
+    private void showError(@StringRes int message) {
+        Snackbar.make(findViewById(R.id.main_coordinator), message,
                 Snackbar.LENGTH_SHORT)
                 .show();
     }
@@ -180,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     openFilePicker();
                 } else {
-                    showError();
+                    showError(R.string.storage_permission_error);
                 }
             }
         }
