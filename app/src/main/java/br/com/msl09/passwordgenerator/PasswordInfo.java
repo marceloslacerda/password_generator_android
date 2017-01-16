@@ -5,6 +5,7 @@ import android.util.Base64;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.generators.PKCS5S2ParametersGenerator;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.tls.DefaultTlsAgreementCredentials;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -12,6 +13,7 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 
 /**
@@ -23,12 +25,27 @@ public class PasswordInfo implements Serializable {
     public String user;
     public String salt;
     public Integer length;
-    public final Integer version = 1;
     public String symbols;
+    public final Integer version = 1;
     public static final int DEFAULT_PASSES = 150000;
-    public static final int DEFAULT_SIZE = 12;
+    public static final int DEFAULT_SIZE = 16;
     public static final String ALPHANUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
             "abcdefghijklmnopqrstuvwxyz";
+    public static final int SALT_LENGTH = 32;
+
+    public  PasswordInfo() {
+        this.hostname = "";
+        this.user = "";
+        this.salt = Base64.encodeToString(getNewSalt(), Base64.DEFAULT);
+        this.length = DEFAULT_SIZE;
+        this.symbols = "";
+    }
+
+    private static byte[] getNewSalt() {
+        byte[] b = new byte[SALT_LENGTH];
+        new Random().nextBytes(b);
+        return b;
+    }
 
     public static JSONObject fromMapToJSON(Map<String, PasswordInfo> map){
         JSONObject jsonObject = new JSONObject();
