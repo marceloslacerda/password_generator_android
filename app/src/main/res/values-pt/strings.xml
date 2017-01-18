@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PasswordGenerator</string>
+    <string name="action_export">Exportar</string>
+    <string name="action_import">Importar</string>
+    <string name="action_settings">Configurações</string>
+    <string name="are_you_sure_delete">Você tem certeza que quer apagar essa senha?</string>
+    <string name="calculatingPassword">Por favor, aguarde. Calculando a senha…</string>
+    <string name="copy">Copiar</string>
+    <string name="copyNotification">Senha copiada para área de transferência</string>
+    <string name="delete_password">Deletar a Senha</string>
+    <string name="error_reading">Erro ao ler o arquivo selecionado</string>
+    <string name="export_error">A exportação falhou</string>
+    <string name="extra_symbols">Símbolos Extras</string>
+    <string name="generated_password">Senha Gerada</string>
+    <string name="hostname">Site</string>
+    <string name="length">Tamanho</string>
+    <string name="length_format_error">Tamanho deve ser um número decimal</string>
+    <string name="master_password">Senha mestre</string>
+    <string name="no">Não</string>
+    <string name="password_saved">Senha Salva</string>
+    <string name="regenerate">Reger</string>
+    <string name="salt">Sal</string>
+    <string name="save_password">Salvar Senha</string>
+    <string name="show">Exibir</string>
+    <string name="storage_permission_error">Permita acesso de leitura ao storage externo para importar</string>
+    <string name="title_activity_main">Senhas</string>
+    <string name="username">Usuário</string>
+    <string name="wait">Aguarde</string>
+    <string name="yes">Sim</string>
+</resources>

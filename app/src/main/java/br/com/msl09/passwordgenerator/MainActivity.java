@@ -326,6 +326,7 @@ public class MainActivity extends AppCompatActivity {
         InputStream inputStream = getContentResolver().openInputStream(uri);
         if (inputStream == null) {
             showMessage(R.string.error_reading);
+            return "";
         }
         BufferedReader reader = new BufferedReader(new InputStreamReader(
                 inputStream));
