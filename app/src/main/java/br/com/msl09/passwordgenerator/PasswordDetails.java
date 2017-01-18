@@ -5,6 +5,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -54,7 +55,7 @@ public class PasswordDetails extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 passwordInfo.genNewSalt();
-                saltLabel.setText(passwordInfo.salt.substring(0, 3) + "...");
+                saltLabel.setText(shortenText(passwordInfo.salt));
             }
         });
 
@@ -64,9 +65,18 @@ public class PasswordDetails extends AppCompatActivity {
         setText(extraField, passwordInfo.symbols);
         setText(lengthField, passwordInfo.length.toString());
         setText(masterField, "");
-        saltLabel.setText(passwordInfo.salt.substring(0, 3));
+        saltLabel.setText(shortenText(passwordInfo.salt));
         generatedPasswordLabel.setText("");
 
+    }
+
+    @NonNull
+    private String shortenText(String string) {
+        if(string.length() > 3) {
+            return string.substring(0, 3) + "...";
+        } else {
+            return string;
+        }
     }
 
     private void setText(EditText view, String text) {
@@ -142,7 +152,7 @@ public class PasswordDetails extends AppCompatActivity {
             ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
             ClipData clip = ClipData.newPlainText("simple text", result);
             clipboardManager.setPrimaryClip(clip);
-            generatedPasswordLabel.setText(result.substring(0, 3) + "...");
+            generatedPasswordLabel.setText(shortenText(result));
         }
     }
 
