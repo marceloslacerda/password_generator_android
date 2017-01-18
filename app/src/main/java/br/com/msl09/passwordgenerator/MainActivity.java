@@ -16,6 +16,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Base64;
@@ -25,7 +26,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 
 import com.nbsp.materialfilepicker.MaterialFilePicker;
 import com.nbsp.materialfilepicker.ui.FilePickerActivity;
@@ -41,7 +45,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
@@ -65,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
+    private String selectedUser = "";
 
 
     @Override
@@ -84,7 +93,37 @@ public class MainActivity extends AppCompatActivity {
         mergeJSON(getSavedPasswords());
         handleSavePasswordIntent();
         handleDeletePasswordIntent();
-        regenPasswordList();
+    }
+
+    private void setupSpinner(Spinner spinner) {
+        List<String> users = getUsers();
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_dropdown_item, users);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView parent, View view, int position, long id) {
+                String user = (String) parent.getItemAtPosition(position);
+                regenPasswordList(user);
+                selectedUser = user;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+    }
+
+    private List<String> getUsers() {
+        Set<String> set = new HashSet<>();
+        for(Map.Entry<String, PasswordInfo> entry : this.passwords.entrySet()) {
+            set.add(entry.getValue().user);
+        }
+        return new ArrayList<>(set);
     }
 
     private void handleDeletePasswordIntent() {
@@ -104,19 +143,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void regenPasswordList() {
+    private void regenPasswordList(String user) {
         ViewGroup vg = (ViewGroup) findViewById(R.id.list_container);
         vg.removeAllViews();
         for (Map.Entry<String, PasswordInfo> entry : this.passwords.entrySet()) {
-            Button button = new Button(this);
-            final PasswordInfo passwordInfo = entry.getValue();
-            button.setText(passwordInfo.hostname);
-            button.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    showPassword(passwordInfo);
-                }
-            });
-            vg.addView(button);
+            if(entry.getValue().user.equals(user)) {
+                Button button = new Button(this);
+                final PasswordInfo passwordInfo = entry.getValue();
+                button.setText(passwordInfo.hostname);
+                button.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        showPassword(passwordInfo);
+                    }
+                });
+                vg.addView(button);
+            }
         }
     }
 
@@ -314,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 mergeJSON(text);
-                regenPasswordList();
+                regenPasswordList(selectedUser);
                 Snackbar.make(findViewById(R.id.main_coordinator), "Successfully merged the database",
                         Snackbar.LENGTH_SHORT)
                         .show();
@@ -345,6 +386,10 @@ public class MainActivity extends AppCompatActivity {
         // Inflate the menu items for use in the action bar
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_scrolling, menu);
+
+        MenuItem item = menu.findItem(R.id.user_spinner);
+        Spinner spinner = (Spinner) MenuItemCompat.getActionView(item);
+        setupSpinner(spinner);
         return super.onCreateOptionsMenu(menu);
     }
 }

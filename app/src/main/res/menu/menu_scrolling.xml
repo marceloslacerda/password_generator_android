@@ -1,6 +1,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <item android:id="@+id/user_spinner"
+        android:title="@string/username"
+        app:actionViewClass="android.widget.Spinner"
+        android:background="#ff00"
+        app:showAsAction="always"
+        />
     <item android:id="@+id/action_import"
         android:icon="@android:drawable/stat_sys_download"
         android:title="@string/action_import"
@@ -10,6 +16,7 @@
         android:icon="@android:drawable/stat_sys_upload"
         android:title="@string/action_export"
         app:showAsAction="always"  />
+
     <!-- Settings, should always be in the overflow -->
     <!--<item android:id="@+id/action_settings"
         android:title="@string/action_settings"
