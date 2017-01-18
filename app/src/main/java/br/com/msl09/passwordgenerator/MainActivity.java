@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity {
     public static final int PERMISSIONS_REQUEST_CODE = 0;
     public static final int FILE_PICKER_REQUEST_CODE = 1;
-    public static String EXTRA_MESSAGE = "br.com.msl09.passwordgenerator.SHOWPASSWORD";
+    public static String EXTRA_MESSAGE = "br.com.msl09.passwordgenerator.SHOW_PASSWORD";
     private Map<String, PasswordInfo> passwords = new TreeMap<>();
     private String INITIAL_ENTRY = ("{\n" +
             "          \"first.entryyour-user\" : {\n" +
@@ -83,11 +83,20 @@ public class MainActivity extends AppCompatActivity {
         });
         mergeJSON(getSavedPasswords());
         handleSavePasswordIntent();
+        handleDeletePasswordIntent();
         regenPasswordList();
     }
 
+    private void handleDeletePasswordIntent() {
+        String passwordKey = (String) getIntent().getSerializableExtra(PasswordDetails.DELETE_PASSWORD);
+        if(passwordKey != null) {
+            this.passwords.remove(passwordKey);
+            savePasswords(PasswordInfo.fromMapToJSON(this.passwords).toString());
+        }
+    }
+
     private void handleSavePasswordIntent() {
-        PasswordInfo passwordInfo = (PasswordInfo) getIntent().getSerializableExtra(MainActivity.EXTRA_MESSAGE);
+        PasswordInfo passwordInfo = (PasswordInfo) getIntent().getSerializableExtra(PasswordDetails.SAVE_LIST);
         if(passwordInfo != null) {
             this.passwords.put(passwordInfo.key(), passwordInfo);
             savePasswords(PasswordInfo.fromMapToJSON(this.passwords).toString());
@@ -126,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(getString(R.string.password_setting_key), s);
-        editor.commit();
+        editor.apply();
     }
 
     private String getSavedPasswords(){
@@ -191,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
      *
      * If the app does not has permission then the user will be prompted to grant permissions
      *
-     * @param activity
+     * @param activity the activity calling this method
      */
     public static void verifyStoragePermissions(Activity activity) {
         // Check if we have write permission
@@ -315,6 +324,9 @@ public class MainActivity extends AppCompatActivity {
 
     private String readTextFromUri(Uri uri) throws IOException {
         InputStream inputStream = getContentResolver().openInputStream(uri);
+        if(inputStream == null) {
+            showMessage(R.string.error_reading);
+        }
         BufferedReader reader = new BufferedReader(new InputStreamReader(
                 inputStream));
         StringBuilder stringBuilder = new StringBuilder();

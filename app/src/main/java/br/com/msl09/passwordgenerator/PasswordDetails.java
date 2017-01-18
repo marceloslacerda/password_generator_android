@@ -1,8 +1,10 @@
 package br.com.msl09.passwordgenerator;
 
+import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
@@ -18,6 +20,8 @@ import android.widget.Toast;
 import java.io.UnsupportedEncodingException;
 
 public class PasswordDetails extends AppCompatActivity {
+    public static final String DELETE_PASSWORD = "br.com.msl09.passwordgenerator.DELETE_PASSWORD";
+    public static final String SAVE_LIST = "br.com.msl09.passwordgenerator.SHOW_PASSWORD";
     EditText hostnameField;
     EditText usernameField;
     EditText extraField;
@@ -26,7 +30,6 @@ public class PasswordDetails extends AppCompatActivity {
     TextView saltLabel;
     TextView generatedPasswordLabel;
     private PasswordInfo passwordInfo;
-    public static String SAVE_LIST = "br.com.msl09.passwordgenerator.SHOWPASSWORD";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +62,15 @@ public class PasswordDetails extends AppCompatActivity {
             }
         });
 
+        Button deleteButton = (Button) findViewById(R.id.delete_password_button);
+
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                deletePassword();
+            }
+        });
+
         passwordInfo = (PasswordInfo) getIntent().getSerializableExtra(MainActivity.EXTRA_MESSAGE);
         setText(hostnameField, passwordInfo.hostname);
         setText(usernameField, passwordInfo.user);
@@ -68,6 +80,30 @@ public class PasswordDetails extends AppCompatActivity {
         saltLabel.setText(shortenText(passwordInfo.salt));
         generatedPasswordLabel.setText("");
 
+    }
+
+    private void deletePassword() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // 2. Chain together various setter methods to set the dialog characteristics
+        builder.setMessage(R.string.delete_password)
+                .setTitle(R.string.are_you_sure_delete)
+                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        sendDeleteIntent();
+                    }
+                })
+                .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // Nothing to do
+                    }
+                })
+                .show();
+    }
+
+    private void sendDeleteIntent() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra(DELETE_PASSWORD, passwordInfo.key());
+        this.startActivity(intent);
     }
 
     @NonNull
@@ -85,32 +121,37 @@ public class PasswordDetails extends AppCompatActivity {
 
     private void sendToMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
+        updatePasswordInfo();
+        intent.putExtra(SAVE_LIST, passwordInfo);
+        this.startActivity(intent);
+    }
+
+    private void updatePasswordInfo() {
         passwordInfo.user = usernameField.getText().toString();
         passwordInfo.hostname = hostnameField.getText().toString();
         passwordInfo.symbols = extraField.getText().toString();
         try {
-            passwordInfo.length = new Integer(lengthField.getText().toString());
+            passwordInfo.length = Integer.valueOf(lengthField.getText().toString());
         } catch (NumberFormatException ex) {
-            Snackbar.make(findViewById(R.id.main_coordinator), R.string.length_format_error,
+            Snackbar.make(findViewById(R.id.activity_password_details), R.string.length_format_error,
                     Snackbar.LENGTH_SHORT)
                     .show();
         }
         // salt is updated in place
         passwordInfo.hostname = hostnameField.getText().toString();
-        intent.putExtra(SAVE_LIST, passwordInfo);
-        this.startActivity(intent);
     }
 
     public void clickGenerateButton(View view) {
         PasswordTuple tuple = new PasswordTuple();
         tuple.master = masterField.getText().toString();
+        updatePasswordInfo();
         tuple.passwordInfo = passwordInfo;
         new CalculatePasswordTask().execute(tuple);
     }
 
     public class PasswordTuple {
-        public String master;
-        public PasswordInfo passwordInfo;
+        String master;
+        PasswordInfo passwordInfo;
     }
 
     private class CalculatePasswordTask extends AsyncTask<PasswordTuple, Void, String> {
