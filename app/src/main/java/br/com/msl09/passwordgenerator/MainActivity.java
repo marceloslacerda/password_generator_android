@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleDeletePasswordIntent() {
         String passwordKey = (String) getIntent().getSerializableExtra(PasswordDetails.DELETE_PASSWORD);
-        if(passwordKey != null) {
+        if (passwordKey != null) {
             this.passwords.remove(passwordKey);
             savePasswords(PasswordInfo.fromMapToJSON(this.passwords).toString());
         }
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleSavePasswordIntent() {
         PasswordInfo passwordInfo = (PasswordInfo) getIntent().getSerializableExtra(PasswordDetails.SAVE_LIST);
-        if(passwordInfo != null) {
+        if (passwordInfo != null) {
             this.passwords.put(passwordInfo.key(), passwordInfo);
             savePasswords(PasswordInfo.fromMapToJSON(this.passwords).toString());
             showMessage(R.string.password_saved);
@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
     }
 
-    private String getSavedPasswords(){
+    private String getSavedPasswords() {
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         return sharedPref.getString(getString(R.string.password_setting_key), INITIAL_ENTRY);
 
@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void tryToSavePasswords() {
-        if(isExternalStorageWritable()) {
+        if (isExternalStorageWritable()) {
             verifyStoragePermissions(this);
             writeToExternalStorage(PasswordInfo.fromMapToJSON(this.passwords).toString());
         } else {
@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Checks if the app has permission to write to device storage
-     *
+     * <p>
      * If the app does not has permission then the user will be prompted to grant permissions
      *
      * @param activity the activity calling this method
@@ -238,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
             // Tell the media scanner about the new file so that it is
             // immediately available to the user.
             MediaScannerConnection.scanFile(this,
-                    new String[] { file.toString() }, null,
+                    new String[]{file.toString()}, null,
                     new MediaScannerConnection.OnScanCompletedListener() {
                         public void onScanCompleted(String path, Uri uri) {
                             Log.i("ExternalStorage", "Scanned " + path + ":");
@@ -324,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String readTextFromUri(Uri uri) throws IOException {
         InputStream inputStream = getContentResolver().openInputStream(uri);
-        if(inputStream == null) {
+        if (inputStream == null) {
             showMessage(R.string.error_reading);
         }
         BufferedReader reader = new BufferedReader(new InputStreamReader(
