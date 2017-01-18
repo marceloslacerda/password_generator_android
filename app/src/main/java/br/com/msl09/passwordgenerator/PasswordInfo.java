@@ -36,15 +36,15 @@ public class PasswordInfo implements Serializable {
     public  PasswordInfo() {
         this.hostname = "";
         this.user = "";
-        this.salt = Base64.encodeToString(getNewSalt(), Base64.DEFAULT);
+        genNewSalt();
         this.length = DEFAULT_SIZE;
         this.symbols = "";
     }
 
-    private static byte[] getNewSalt() {
+    public void genNewSalt() {
         byte[] b = new byte[SALT_LENGTH];
         new Random().nextBytes(b);
-        return b;
+        this.salt = Base64.encodeToString(b, Base64.DEFAULT);
     }
 
     public static JSONObject fromMapToJSON(Map<String, PasswordInfo> map){

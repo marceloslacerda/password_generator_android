@@ -3,7 +3,9 @@ package br.com.msl09.passwordgenerator;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -12,11 +14,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 
 public class PasswordDetails extends AppCompatActivity {
     EditText hostnameField;
@@ -27,7 +25,7 @@ public class PasswordDetails extends AppCompatActivity {
     TextView saltLabel;
     TextView generatedPasswordLabel;
     private PasswordInfo passwordInfo;
-
+    public static String SAVE_LIST = "br.com.msl09.passwordgenerator.SHOWPASSWORD";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +38,25 @@ public class PasswordDetails extends AppCompatActivity {
         masterField = (EditText) findViewById(R.id.master_password);
         saltLabel = (TextView) findViewById(R.id.salt);
         generatedPasswordLabel = (TextView) findViewById(R.id.generated_password);
+
+        Button saveButton = (Button) findViewById(R.id.save_password_button);
+
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendToMainActivity();
+            }
+        });
+
+        Button saltButton = (Button) findViewById(R.id.regenerate_salt_button);
+
+        saltButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                passwordInfo.genNewSalt();
+                saltLabel.setText(passwordInfo.salt.substring(0, 3) + "...");
+            }
+        });
 
         passwordInfo = (PasswordInfo) getIntent().getSerializableExtra(MainActivity.EXTRA_MESSAGE);
         setText(hostnameField, passwordInfo.hostname);
@@ -54,6 +71,24 @@ public class PasswordDetails extends AppCompatActivity {
 
     private void setText(EditText view, String text) {
         view.setText(text, TextView.BufferType.EDITABLE);
+    }
+
+    private void sendToMainActivity() {
+        Intent intent = new Intent(this, MainActivity.class);
+        passwordInfo.user = usernameField.getText().toString();
+        passwordInfo.hostname = hostnameField.getText().toString();
+        passwordInfo.symbols = extraField.getText().toString();
+        try {
+            passwordInfo.length = new Integer(lengthField.getText().toString());
+        } catch (NumberFormatException ex) {
+            Snackbar.make(findViewById(R.id.main_coordinator), R.string.length_format_error,
+                    Snackbar.LENGTH_SHORT)
+                    .show();
+        }
+        // salt is updated in place
+        passwordInfo.hostname = hostnameField.getText().toString();
+        intent.putExtra(SAVE_LIST, passwordInfo);
+        this.startActivity(intent);
     }
 
     public void clickGenerateButton(View view) {

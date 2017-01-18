@@ -82,7 +82,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         mergeJSON(getSavedPasswords());
+        handleSavePasswordIntent();
         regenPasswordList();
+    }
+
+    private void handleSavePasswordIntent() {
+        PasswordInfo passwordInfo = (PasswordInfo) getIntent().getSerializableExtra(MainActivity.EXTRA_MESSAGE);
+        if(passwordInfo != null) {
+            this.passwords.put(passwordInfo.key(), passwordInfo);
+            savePasswords(PasswordInfo.fromMapToJSON(this.passwords).toString());
+            showMessage(R.string.password_saved);
+        }
     }
 
     private void regenPasswordList() {
@@ -171,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
             verifyStoragePermissions(this);
             writeToExternalStorage(PasswordInfo.fromMapToJSON(this.passwords).toString());
         } else {
-            showError(R.string.export_error);
+            showMessage(R.string.export_error);
         }
 
     }
@@ -229,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             // Unable to create file, likely because external storage is
             // not currently mounted.
-            showError(R.string.export_error);
+            showMessage(R.string.export_error);
             Log.w("ExternalStorage", "Error writing " + file, e);
         }
     }
@@ -240,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
-                showError(R.string.storage_permission_error);
+                showMessage(R.string.storage_permission_error);
             } else {
                 ActivityCompat.requestPermissions(this, new String[]{permission}, PERMISSIONS_REQUEST_CODE);
             }
@@ -249,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showError(@StringRes int message) {
+    private void showMessage(@StringRes int message) {
         Snackbar.make(findViewById(R.id.main_coordinator), message,
                 Snackbar.LENGTH_SHORT)
                 .show();
@@ -264,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     openFilePicker();
                 } else {
-                    showError(R.string.storage_permission_error);
+                    showMessage(R.string.storage_permission_error);
                 }
             }
         }
