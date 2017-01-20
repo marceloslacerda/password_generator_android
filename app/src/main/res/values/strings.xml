@@ -28,4 +28,8 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="error_reading">Error reading the selected file.</string>
+    <string name="export_hint_string">Please choose where to export your database</string>
+    <string name="dropbox">Dropbox</string>
+    <string name="export_filesystem_string">Filesystem(not recommended)</string>
+    <string name="success_database_merge">Successfully merged the database</string>
 </resources>

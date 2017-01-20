@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dropboxChooserSDK/dropboxChooserSDK.iml" filepath="$PROJECT_DIR$/dropboxChooserSDK/dropboxChooserSDK.iml" />
       <module fileurl="file://$PROJECT_DIR$/password_generator_android.iml" filepath="$PROJECT_DIR$/password_generator_android.iml" />
     </modules>
   </component>

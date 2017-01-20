@@ -56,6 +56,7 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity {
     public static final int PERMISSIONS_REQUEST_CODE = 0;
     public static final int FILE_PICKER_REQUEST_CODE = 1;
+    static final String EXPORT_INTENT = "br.com.msl09.passwordgenerator.EXPORT_DATABASEn";
     public static String EXTRA_MESSAGE = "br.com.msl09.passwordgenerator.SHOW_PASSWORD";
     private Map<String, PasswordInfo> passwords = new TreeMap<>();
     private String INITIAL_ENTRY = ("{\n" +
@@ -215,7 +216,9 @@ public class MainActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_export:
-                tryToSavePasswords();
+                Intent intent = new Intent(this, ExportImportView.class);
+                intent.putExtra(EXPORT_INTENT, PasswordInfo.fromMapToJSON(this.passwords).toString());
+                this.startActivity(intent);
                 return true;
 
             default:
@@ -356,9 +359,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 mergeJSON(text);
                 regenPasswordList(selectedUser);
-                Snackbar.make(findViewById(R.id.main_coordinator), "Successfully merged the database",
-                        Snackbar.LENGTH_SHORT)
-                        .show();
+                showMessage(R.string.success_database_merge);
             }
         }
     }
