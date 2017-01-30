@@ -29,7 +29,7 @@ dependencies {
     compile 'com.android.support:design:25.1.0'
     compile 'com.nbsp:library:1.1'
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.55'
-
+    compile 'com.google.android.gms:play-services-drive:10.0.1'
     testCompile 'junit:junit:4.12'
 }
 
