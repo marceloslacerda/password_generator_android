@@ -54,14 +54,14 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
-    public static final int PERMISSIONS_REQUEST_CODE = 0;
-    public static final int FILE_PICKER_REQUEST_CODE = 1;
-    static final String EXPORT_INTENT = "br.com.msl09.passwordgenerator.EXPORT_DATABASEn";
+
+    static final String EXPORT_INTENT = "br.com.msl09.passwordgenerator.EXPORT_DATABASE";
+    static final String IMPORT_INTENT = "br.com.msl09.passwordgenerator.IMPORT_DATABASE";
     public static String EXTRA_MESSAGE = "br.com.msl09.passwordgenerator.SHOW_PASSWORD";
     private Map<String, PasswordInfo> passwords = new TreeMap<>();
     private String INITIAL_ENTRY = ("{\n" +
             "          \"first.entryyour-user\" : {\n" +
-            "            \"salt\": \"" + getExampleSalt() + "\",\n" +
+            "            \"salt\": \"\",\n" +
             "            \"length\": 12,\n" +
             "            \"symbols\": \"!@#$\",\n" +
             "            \"hostname\": \"first.entry\",\n" +
@@ -69,11 +69,8 @@ public class MainActivity extends AppCompatActivity {
             "          }\n" +
             "        }");
     // Storage Permissions
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
-    private static String[] PERMISSIONS_STORAGE = {
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-    };
+
+
     private String selectedUser = "";
 
 
@@ -94,6 +91,16 @@ public class MainActivity extends AppCompatActivity {
         mergeJSON(getSavedPasswords());
         handleSavePasswordIntent();
         handleDeletePasswordIntent();
+        handleImportSuccessIntent();
+    }
+
+    private void handleImportSuccessIntent() {
+        String passwordsJSON = (String) getIntent().getSerializableExtra(ExportImportView.IMPORT_SUCCESS_INTENT);
+        if (passwordsJSON != null) {
+            mergeJSON(passwordsJSON);
+            regenPasswordList(selectedUser);
+            showMessage(R.string.success_database_merge);
+        }
     }
 
     private void setupSpinner(Spinner spinner) {
@@ -193,30 +200,22 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public static String getExampleSalt() {
-        String saltString = "salt";
-        try {
-            byte[] bytes = saltString.getBytes("UTF-8");
-            return Base64.encodeToString(bytes, Base64.DEFAULT);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent;
         switch (item.getItemId()) {
             /*case R.id.action_settings:
                 // User chose the "Settings" item, show the app settings UI...
                 return true;
             */
             case R.id.action_import:
-                checkPermissionsAndOpenFilePicker();
+                intent = new Intent(this, ExportImportView.class);
+                intent.setAction(IMPORT_INTENT);
+                this.startActivity(intent);
                 return true;
 
             case R.id.action_export:
-                Intent intent = new Intent(this, ExportImportView.class);
+                intent = new Intent(this, ExportImportView.class);
                 intent.putExtra(EXPORT_INTENT, PasswordInfo.fromMapToJSON(this.passwords).toString());
                 this.startActivity(intent);
                 return true;
@@ -229,158 +228,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void tryToSavePasswords() {
-        if (isExternalStorageWritable()) {
-            verifyStoragePermissions(this);
-            writeToExternalStorage(PasswordInfo.fromMapToJSON(this.passwords).toString());
-        } else {
-            showMessage(R.string.export_error);
-        }
 
-    }
-
-    /**
-     * Checks if the app has permission to write to device storage
-     * <p>
-     * If the app does not has permission then the user will be prompted to grant permissions
-     *
-     * @param activity the activity calling this method
-     */
-    public static void verifyStoragePermissions(Activity activity) {
-        // Check if we have write permission
-        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(
-                    activity,
-                    PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE
-            );
-        }
-    }
-
-    /* Checks if external storage is available for read and write */
-    public boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        return Environment.MEDIA_MOUNTED.equals(state);
-    }
-
-    public void writeToExternalStorage(String data) {
-        File path = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS);
-        File file = new File(path, ".pinfo.json");
-
-        try {
-            // Make sure the downloads directory exists.
-            path.mkdirs();
-
-            OutputStream os = new FileOutputStream(file);
-            os.write(data.getBytes());
-            os.close();
-
-            // Tell the media scanner about the new file so that it is
-            // immediately available to the user.
-            MediaScannerConnection.scanFile(this,
-                    new String[]{file.toString()}, null,
-                    new MediaScannerConnection.OnScanCompletedListener() {
-                        public void onScanCompleted(String path, Uri uri) {
-                            Log.i("ExternalStorage", "Scanned " + path + ":");
-                            Log.i("ExternalStorage", "-> uri=" + uri);
-                        }
-                    });
-        } catch (IOException e) {
-            // Unable to create file, likely because external storage is
-            // not currently mounted.
-            showMessage(R.string.export_error);
-            Log.w("ExternalStorage", "Error writing " + file, e);
-        }
-    }
-
-
-    private void checkPermissionsAndOpenFilePicker() {
-        String permission = Manifest.permission.READ_EXTERNAL_STORAGE;
-
-        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
-                showMessage(R.string.storage_permission_error);
-            } else {
-                ActivityCompat.requestPermissions(this, new String[]{permission}, PERMISSIONS_REQUEST_CODE);
-            }
-        } else {
-            openFilePicker();
-        }
-    }
 
     private void showMessage(@StringRes int message) {
-        Snackbar.make(findViewById(R.id.main_coordinator), message,
-                Snackbar.LENGTH_SHORT)
-                .show();
+        ActivityUtil.showMessage(findViewById(R.id.main_coordinator), message);
     }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String permissions[], @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case PERMISSIONS_REQUEST_CODE: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    openFilePicker();
-                } else {
-                    showMessage(R.string.storage_permission_error);
-                }
-            }
-        }
-    }
-
-    private void openFilePicker() {
-        new MaterialFilePicker()
-                .withActivity(this)
-                .withRequestCode(FILE_PICKER_REQUEST_CODE)
-                .withHiddenFiles(true)
-                .withFilter(Pattern.compile(".*\\.json$"))
-                .start();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == FILE_PICKER_REQUEST_CODE && resultCode == RESULT_OK) {
-            String path = data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH);
-
-            if (path != null) {
-                Log.d("Path: ", path);
-                String text = "file not found";
-                try {
-                    text = readTextFromUri(Uri.fromFile(new File(path)));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                mergeJSON(text);
-                regenPasswordList(selectedUser);
-                showMessage(R.string.success_database_merge);
-            }
-        }
-    }
-
-    private String readTextFromUri(Uri uri) throws IOException {
-        InputStream inputStream = getContentResolver().openInputStream(uri);
-        if (inputStream == null) {
-            showMessage(R.string.error_reading);
-            return "";
-        }
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
-                inputStream));
-        StringBuilder stringBuilder = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            stringBuilder.append(line);
-        }
-        inputStream.close();
-        return stringBuilder.toString();
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

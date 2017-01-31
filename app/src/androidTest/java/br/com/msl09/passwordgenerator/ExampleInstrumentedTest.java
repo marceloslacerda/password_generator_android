@@ -23,16 +23,4 @@ public class ExampleInstrumentedTest {
 
         assertEquals("br.com.msl09.passwordgenerator", appContext.getPackageName());
     }
-
-    @Test
-    public void test_getPassword() throws Exception {
-        PasswordInfo passwordInfo = new PasswordInfo();
-        passwordInfo.hostname = "foo.bar";
-        passwordInfo.length = 12;
-        passwordInfo.symbols = "#!@";
-        passwordInfo.user = "baz";
-        passwordInfo.salt = MainActivity.getExampleSalt();
-        assertEquals(PasswordInfo.getPassword("123456", passwordInfo), "6dMX5kmw4#!@");
-
-    }
 }
